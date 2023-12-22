@@ -260,7 +260,7 @@ def calc_Dconstant(Lambda, N=200):
     return integral_common(dfuncF_dLambda, Lambda, N=N)
 
 
-def calc_DDconstant_simplify(Lambda, N=200, Hesse=True):
+def calc_DDconstant(Lambda, N=200, Hesse=True):
     """Second-Derivative of normalizing constant C
 
     Args:
