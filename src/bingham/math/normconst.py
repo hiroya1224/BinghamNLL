@@ -125,6 +125,7 @@ def ddfuncF_dLambdadLambda(t, Lambda, c, gamma=None):
         numpy.array: (d/d Lambda)^2 A
 
     """
+    Lambda, gamma = preprocess_vars(Lambda, gamma)
     arr = (-Lambda[:, :, None] + 1j * t + c) ** (-1)
     arr = np.einsum('bit,bjt->bijt', arr, arr)
     arr = arr * (0.25 * np.ones((4,4)) + 0.5 * np.eye(4))[None,:,:,None]
@@ -280,7 +281,7 @@ def calc_DDconstant(Lambda, N=200, Hesse=True):
             Depends on the value of given `Hesse`.
 
     """
-    dds = integral_common(ddfuncF_dLambdadLambda, Lambda, N)
+    dds = integral_common(ddfuncF_dLambdadLambda, Lambda, N=N)
     if Hesse:
         DD = np.zeros((dds.shape[0], 4,4))
         DD[:, np.triu_indices(4)[0], np.triu_indices(4)[1]] = dds
