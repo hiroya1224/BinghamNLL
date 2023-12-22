@@ -107,6 +107,33 @@ def dfuncF_dLambda(t, Lambda, c, gamma=None):
     return (0.5 / (-Lambda[:, :, None] + 1j * t + c)) * funcF(t, Lambda, c)
 
 
+def ddfuncF_dLambdadLambda(t, Lambda, c, gamma=None):
+    """d^2/d theta d theta A(t, theta, gamma)
+
+    NOTE:
+        This formula is not presented in the paper.
+        One can derive the formula by direct differentiation of
+        d/d theta A with respect to theta
+
+    Args:
+        t (float): Parameter
+        Lambda (numpy.array): Eigen values
+        c (float): = -t0 in definition
+        gamma (numpy.array): === 0 in this case
+
+    Returns:
+        numpy.array: (d/d Lambda)^2 A
+
+    """
+    arr = (-Lambda[:, :, None] + 1j * t + c) ** (-1)
+    arr = np.einsum('bit,bjt->bijt', arr, arr)
+    arr = arr * (0.25 * np.ones((4,4)) + 0.5 * np.eye(4))[None,:,:,None]
+    ## flatten to 4x4 --> 10, noting that Hesse matrix here is symmetric
+    triu_idces = np.triu_indices(4)
+    arr = arr[:, triu_idces[0], triu_idces[1], :]
+    return arr * funcF(t, Lambda, c)
+
+
 def integral_common(integrand, Lambda, gamma=None, N=200):
     """Integration part of Fisher-Bingham distribution
 
@@ -231,3 +258,32 @@ def calc_Dconstant(Lambda, N=200):
 
     """
     return integral_common(dfuncF_dLambda, Lambda, N=N)
+
+
+def calc_DDconstant_simplify(Lambda, N=200, Hesse=True):
+    """Second-Derivative of normalizing constant C
+
+    Args:
+        Lambda (np.array):
+            Array of 4 non-positive numbers with shape Bx4
+            where B is batch size (corresponds to eigenvalues)
+        N (int): Number of division
+        Hesse (bool):
+            Type of returned array. 
+            If True, the Hessian matrix will be returned.
+            If False, the upper triangular part of 
+            the Hessian matrix will be returned.
+            Note that the Hessian matrix is symmetric.
+
+    Returns:
+        numpy.array:
+            Depends on the value of given `Hesse`.
+
+    """
+    dds = integral_common(ddfuncF_dLambdadLambda, Lambda, N)
+    if Hesse:
+        DD = np.zeros((dds.shape[0], 4,4))
+        DD[:, np.triu_indices(4)[0], np.triu_indices(4)[1]] = dds
+        DD[:, np.triu_indices(4)[1], np.triu_indices(4)[0]] = dds
+        dds = DD
+    return dds
