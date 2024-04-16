@@ -180,6 +180,7 @@ def integral_common(integrand, Lambda, gamma=None, N=200):
     Lambda_max = Lambda.max(axis=1, keepdims=True)
     Lambda_shifted = Lambda - Lambda_max
     shift_constant = np.exp(Lambda_max)
+    dim = Lambda.shape[1]
 
     # For stable computation, we assume any pole of funcF
     # (as well as dfuncF_dLambda)
@@ -219,7 +220,7 @@ def integral_common(integrand, Lambda, gamma=None, N=200):
 
     # Complete result of Eq. 8
     # np.pi**(dim/2.0 - 1) == np.pi since dim == 4 here
-    complex_res = np.pi * np.exp(c) * h * sumres
+    complex_res = np.sqrt(np.pi**(dim - 2)) * np.exp(c) * h * sumres
 
     # Im(complex_res) is very close to zero, but not strictly.
     # We cut off the imaginary part of complex_res.
